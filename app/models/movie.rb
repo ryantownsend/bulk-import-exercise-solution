@@ -15,7 +15,7 @@ class Movie < ApplicationRecord
   validates :publishing_status, inclusion: { in: publishing_statuses.values, allow_nil: false }
 
   # callbacks
-  after_commit :notify_subscribers
+  after_commit :notify_event_stream
 
   # updates the publishing status based on a boolean flag - this just adds a
   # little complexity to the import as it's not a simple 1:1 mapping
@@ -32,11 +32,10 @@ class Movie < ApplicationRecord
 
   private
 
-  # notifies each of the (optional) subscribers that this movie has been updated
-  # only when attributes were changed
-  def notify_subscribers
+  # if this movie was updated, notify the event stream
+  def notify_event_stream
     if previous_changes.any?
-      MovieNotificationJob.perform_later(id)
+      EventStream.movie_updated(id)
     end
   end
 end

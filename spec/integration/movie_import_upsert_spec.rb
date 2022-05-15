@@ -35,6 +35,7 @@ RSpec.describe "Importing movies in bulk", type: :request do
         attributes_for(:movie_import_entry, movie: existing_movie_b, title: "A new title")
       ]
 
+      ActiveSupport::CurrentAttributes.reset_all
       ActionMailer::Base.deliveries.clear
 
       # Act

@@ -179,7 +179,9 @@ module ImportMovies
 
       # enqueue notifications
       AfterCommitEverywhere.after_commit do
-        MovieNotificationJob.perform_later(upserted_movie_ids)
+        upserted_movie_ids.each do |id|
+          EventStream.movie_updated(id)
+        end
       end
 
       # mark the import as finished
