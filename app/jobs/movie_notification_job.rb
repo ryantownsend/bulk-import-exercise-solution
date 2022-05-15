@@ -1,8 +1,9 @@
 class MovieNotificationJob < ApplicationJob
   queue_as :default
 
-  def perform(movie_id)
-    movie = Movie.find(movie_id)
-    NotifyMovieSubscribers.call(movie, movie.subscriber_emails)
+  def perform(movie_ids)
+    Movie.where(id: movie_ids).find_each do |movie|
+      NotifyMovieSubscribers.call(movie, movie.subscriber_emails)
+    end
   end
 end
