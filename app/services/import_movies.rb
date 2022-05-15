@@ -2,7 +2,7 @@ module ImportMovies
   UPSERT_QUERY_TEMPLATE = <<~SQL
     with movie_import_entries as (
       select
-        row_number() over() as index,
+      (row_number() over()) + %{batch_offset_start} as index,
         t.id,
         t.title,
         t.description,
@@ -20,7 +20,7 @@ module ImportMovies
         ) as is_valid
       from
         movie_imports,
-        jsonb_to_recordset(movie_imports.entries) as t(
+        jsonb_to_recordset(jsonb_path_query_array(movie_imports.entries, '$[%{batch_offset_start} to %{batch_offset_end}]')) as t(
           id uuid,
           title text,
           description text,
@@ -39,7 +39,7 @@ module ImportMovies
       update
         movie_imports
       set
-        entry_errors = coalesce(errors.messages, '{}')
+        entry_errors = array_cat(coalesce(entry_errors, '{}'), coalesce(errors.messages, '{}'))
       from (
         select
           array_agg(t.message) as messages
@@ -165,17 +165,46 @@ module ImportMovies
       updated_movies
   SQL
 
-  # processes the upserting of data contained in a bulk import
-  # @param [Integer] movie_import_id
-  def self.call(movie_import_id)
-    ApplicationRecord.transaction do
-      # mark the import as started
-      MovieImport.where(id: movie_import_id).update_all("started_at = now()")
+  MOVIE_IMPORT_BATCH_SIZE = ENV.fetch("MOVIE_IMPORT_BATCH_SIZE") { 10_000 }.to_i
 
+   # processes the upserting of data contained in a bulk import
+  # @param [Integer] movie_import_id
+  def self.call(movie_import_id, batch_size: MOVIE_IMPORT_BATCH_SIZE)
+    # unfortunately, Rails doesn't return generated columns on create
+    # so we have to query for the entry_count manually, but we can
+    # return it within the update to started_at below
+    # mark the import as started and return the entry count
+    entry_count = ApplicationRecord.connection.select_value <<~SQL
+      update movie_imports
+      set started_at = coalesce(started_at, now())
+      where id = '#{movie_import_id}'
+      returning entry_count
+    SQL
+
+    # calculate how many batches this movie has
+    batch_count = (BigDecimal(entry_count) / batch_size).ceil
+    # execute one update per batch
+    0.upto(batch_count - 1) do |batch_index|
+      import_batch(movie_import_id, batch_offset: batch_size * batch_index, batch_size: batch_size)
+    end
+
+    # mark the import as finished
+    MovieImport.where(id: movie_import_id).update_all("finished_at = now()")
+  end
+
+  # Imports a subset of the movie import entries to ensure we don't have any
+  # long running transactions keeping locks open
+  # @param [Integer] movie_import_id
+  # @param [Integer] batch_offset the record to start at
+  # @param [Integer] batch_size how many records to process
+  private_class_method def self.import_batch(movie_import_id, batch_offset:, batch_size:)
+    ApplicationRecord.transaction do
       # perform the upsert
-      upserted_movie_ids = ApplicationRecord.connection.select_values(
-        UPSERT_QUERY_TEMPLATE % { movie_import_id: movie_import_id }
-      )
+      upserted_movie_ids = ApplicationRecord.connection.select_values(UPSERT_QUERY_TEMPLATE % {
+        movie_import_id: movie_import_id,
+        batch_offset_start: batch_offset,
+        batch_offset_end: batch_offset + batch_size
+      })
 
       # enqueue notifications
       AfterCommitEverywhere.after_commit do
@@ -183,9 +212,6 @@ module ImportMovies
           EventStream.movie_updated(id)
         end
       end
-
-      # mark the import as finished
-      MovieImport.where(id: movie_import_id).update_all("finished_at = now()")
     end
   end
 end

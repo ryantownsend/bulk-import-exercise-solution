@@ -24,6 +24,7 @@ jobs:
     env:
       RAILS_ENV: test
       PERFORMANCE_TEST_ENTRIES: 4000
+      MOVIE_IMPORT_BATCH_SIZE: 2000
       DATABASE_URL: "postgres://rails:password@localhost:5432/rails_test"
     steps:
       - name: Checkout code

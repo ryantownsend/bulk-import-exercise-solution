@@ -43,7 +43,8 @@ CREATE TABLE public.movie_imports (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     started_at timestamp(6) without time zone,
-    finished_at timestamp(6) without time zone
+    finished_at timestamp(6) without time zone,
+    entry_count integer GENERATED ALWAYS AS (jsonb_array_length(entries)) STORED NOT NULL
 );
 
 
@@ -159,6 +160,7 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('2'),
 ('3'),
 ('4'),
-('5');
+('5'),
+('6');
 
 
