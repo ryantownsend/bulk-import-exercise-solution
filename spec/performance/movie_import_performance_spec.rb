@@ -19,6 +19,8 @@ RSpec.describe "Importing movies in bulk", type: :request, performance: true do
             "Accept": "application/json",
             "Content-Type": "application/json"
           }
+
+          perform_enqueued_jobs(only: MovieImportJob)
         }
 
         File.open(Rails.root.join("tmp/performance_profile.txt"), "w") do |contents|

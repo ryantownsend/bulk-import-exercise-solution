@@ -5,6 +5,6 @@ class MovieImport < ApplicationRecord
   private
 
   def trigger_import
-    ImportMovies.call(self)
+    MovieImportJob.perform_later(id)
   end
 end

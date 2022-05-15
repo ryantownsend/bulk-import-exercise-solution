@@ -50,4 +50,7 @@ Rails.application.configure do
 
   # Allow us to test email delivery
   config.action_mailer.delivery_method = :test
+
+  # Allow us to test job delivery
+  config.active_job.queue_adapter = :test
 end

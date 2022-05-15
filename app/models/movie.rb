@@ -36,7 +36,7 @@ class Movie < ApplicationRecord
   # only when attributes were changed
   def notify_subscribers
     if previous_changes.any?
-      NotifyMovieSubscribers.call(self, subscriber_emails)
+      MovieNotificationJob.perform_later(id)
     end
   end
 end
