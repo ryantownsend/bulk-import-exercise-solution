@@ -47,7 +47,7 @@ jobs:
         with:
           name: non-functional-reports
           path: |
-            tmp/performance_profile.txt
+            tmp/performance_profile.md
             tmp/memory_profile.txt
 
 #   lint:

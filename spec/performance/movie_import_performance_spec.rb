@@ -21,9 +21,9 @@ RSpec.describe "Importing movies in bulk", type: :request, performance: true do
           }
         }
 
-        File.open(Rails.root.join("tmp/performance_profile.txt"), "w") do |contents|
-          contents << "Response Time:   #{BigDecimal(response.headers["X-Runtime"]).ceil(3)}s\n"
-          contents << "Processing Time: #{processing_time.ceil(3)}s\n"
+        File.open(Rails.root.join("tmp/performance_profile.md"), "w") do |contents|
+          contents << "| API Response Time     | #{BigDecimal(response.headers["X-Runtime"]).ceil(3)}s |\n"
+          contents << "| Total Processing Time | #{processing_time.ceil(3)}s |\n"
         end
 
         expect(response).to have_http_status(:created)
