@@ -1,5 +1,5 @@
 RSpec.configure do |config|
-  config.after(:suite) do
+  config.after(:suite, performance: true) do
     file_location = ENV.fetch("GITHUB_STEP_SUMMARY", Rails.root.join("tmp/summary.md"))
 
     File.open(file_location, "w") do |contents|
