@@ -23,9 +23,12 @@ RSpec.describe "Importing movies in bulk", type: :request, performance: true do
           perform_enqueued_jobs(only: MovieImportJob)
         }
 
-        File.open(Rails.root.join("tmp/performance_profile.txt"), "w") do |contents|
-          contents << "Response Time:   #{BigDecimal(response.headers["X-Runtime"]).ceil(3)}s\n"
-          contents << "Processing Time: #{processing_time.ceil(3)}s\n"
+        File.open(RSpecSummary.summary_output_file, "a") do |contents|
+          contents << "## API Performance\n\n"
+          contents << "| Metric           | Time |\n"
+          contents << "| ---------------- | ---- |\n"
+          contents << "| API Response     | #{BigDecimal(response.headers["X-Runtime"]).ceil(3)}s |\n"
+          contents << "| Total Processing | #{processing_time.ceil(3)}s |\n\n"
         end
 
         expect(response).to have_http_status(:created)

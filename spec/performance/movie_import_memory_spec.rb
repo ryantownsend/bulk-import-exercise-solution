@@ -20,7 +20,13 @@ RSpec.describe "Importing movies in bulk", type: :request, performance: true do
       end
 
       # report
-      report.pretty_print(to_file: Rails.root.join("tmp/memory_profile.txt"), scale_bytes: true)
+      File.open(RSpecSummary.summary_output_file, "a") do |contents|
+        contents << "## API Memory Consumption\n\n"
+        contents << "| Metric            | Amount |\n"
+        contents << "| ----------------- | ------ |\n"
+        contents << "| Memory Allocated  | #{report.scale_bytes(report.total_allocated_memsize)} |\n"
+        contents << "| Objects Allocated | #{report.total_allocated} |\n\n"
+      end
 
       # Assert
       expect(true).to eq(true)
