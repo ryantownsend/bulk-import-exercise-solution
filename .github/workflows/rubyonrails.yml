@@ -37,18 +37,8 @@ jobs:
       - name: Set up database schema
         run: bin/rails db:schema:load
       # Add or replace test runners here
-      - name: Run functional tests
-        run: bin/bundle exec rspec --tag ~@performance
-      - name: Run performance tests
-        run: bin/bundle exec rspec --tag performance --profile 100
-      # Output memory report
-      - name: Output Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: non-functional-reports
-          path: |
-            tmp/performance_profile.txt
-            tmp/memory_profile.txt
+      - name: Run tests
+        run: bin/bundle exec rspec
 
 #   lint:
 #     runs-on: ubuntu-latest
