@@ -8,15 +8,9 @@ The initial implementation is rudimentary in that it works, but it is not remote
 
 There are functional tests covering the behaviour to ensure your changes do not break anything and performance tests to benchmark the speed at which imports occur and the memory utilised. These tests are configured to trigger on Github Actions, therefore it should be straight-forward to clone/fork the repository, make your changes and measure the outcome.
 
-If you open one of the [workflow runs in Github Actions](https://github.com/ryantownsend/bulk-import-exercise/actions/workflows/rubyonrails.yml), you'll see there's a section called "Run Performance Tests", if you open this up it will tell you how fast the performance test ran, e.g:
+If you open one of the [workflow runs in Github Actions](https://github.com/ryantownsend/bulk-import-exercise/actions/workflows/rubyonrails.yml), you'll see there's a summary of the performance and memory consumption of the API.
 
-```
-Top 1 slowest examples (26.62 seconds, 58.5% of total time):
-  Importing movies in bulk importing thousands of movies should execute as fast as possible
-    26.62 seconds ./spec/performance/movie_import_performance_spec.rb:56
-```
-
-Note: you should use the time specified against that test. If you look at the time to execute RSpec, this will be far greater as it includes preparing the database and API payload.
+If you'd prefer to run the test suite locally, you can do so with RSpec (`bundle exec rspec`) and the performance and memory summary will be output to `tmp/summary.md` instead.
 
 ## Features
 
